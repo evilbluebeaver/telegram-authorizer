@@ -3,9 +3,9 @@ name = "telegram-authorizer"
 version = "0.1.0"
 edition = "2021"
 description = "Telegram authorizer for Axum"
-authors = ["Kirill Kindiuk <evilbluebeaver@smail.com>"]
+authors = ["Kirill Kindiuk <evilbluebeaver@gmail.com>"]
 license = "MIT"
-repository = "https://github.com/evilbliebeaver/telegram-authorizer"
+repository = "https://github.com/evilbluebeaver/telegram-authorizer"
 keywords = ["telegram", "axum", "authorization"]
 
 [dependencies]
