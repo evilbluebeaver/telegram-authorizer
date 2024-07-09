@@ -1,0 +1,22 @@
+[package]
+name = "telegram-authorizer"
+version = "0.1.0"
+edition = "2021"
+description = "Telegram authorizer for Axum"
+authors = ["Kirill Kindiuk <evilbluebeaver@smail.com>"]
+license = "MIT"
+repository = "https://github.com/evilbliebeaver/telegram-authorizer"
+keywords = ["telegram", "axum", "authorization"]
+
+[dependencies]
+async-trait = "0.1"
+axum = "0.7"
+hex = "0.4"
+qstring = "0.7"
+ring = "0.17"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tower-layer = "0.3"
+tower-service = "0.3"
+tracing = "0.1"
