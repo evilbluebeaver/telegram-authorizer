@@ -2,6 +2,7 @@
 
 Telegram [miniapp](https://core.telegram.org/bots/webapps) authorizer layer for Axum.
 
+[![Rust](https://github.com/evilbluebeaver/telegram-authorizer/actions/workflows/rust.yml/badge.svg)](https://github.com/evilbluebeaver/telegram-authorizer/actions/workflows/rust.yml)
 [![Crates.io](https://img.shields.io/crates/v/telegram-authorizer)](https://crates.io/crates/telegram-authorizer)
 
 
