@@ -4,9 +4,9 @@ use std::{
     task::{Context, Poll},
 };
 
+use aws_lc_rs::hmac;
 use axum::{extract::Request, response::Response};
 use qstring::QString;
-use ring::hmac;
 use serde::Deserialize;
 use tower_layer::Layer;
 use tower_service::Service;
