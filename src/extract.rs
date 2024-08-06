@@ -15,9 +15,10 @@ where
     async fn from_request_parts(parts: &mut Parts, _: &S) -> Result<Self, Self::Rejection> {
         Ok(parts
             .extensions
-            .get::<TelegramUser>()
+            .get::<User>()
             .ok_or(AuthError::MissingUser)?
-            .clone())
+            .clone()
+            .into())
     }
 }
 
