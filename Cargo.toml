@@ -1,6 +1,6 @@
 [package]
 name = "telegram-authorizer"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Telegram authorizer for Axum"
 authors = ["Kirill Kindiuk <evilbluebeaver@gmail.com>"]
@@ -22,5 +22,5 @@ tower-service = "0.3"
 tracing = "0.1"
 
 [features]
-default = ["aide"]
+default = []
 aide = ["dep:aide"]
