@@ -5,79 +5,60 @@ use std::{
 };
 
 use axum::{extract::Request, response::Response};
-use qstring::QString;
-use ring::hmac;
-use serde::Deserialize;
 use tower_layer::Layer;
 use tower_service::Service;
 
-use crate::error::AuthError;
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct User {
-    pub id: u64,
-}
+use crate::{
+    authorizer::{Authorizer, User},
+    error::AuthError,
+    Embedded, External,
+};
 
 #[derive(Clone)]
-pub struct AuthorizationLayer(pub String);
+pub struct AuthorizationLayer<A: Authorizer> {
+    authorizer: A,
+}
 
-impl AuthorizationLayer {
-    fn prepare_key(&self) -> hmac::Key {
-        let key = hmac::Key::new(hmac::HMAC_SHA256, b"WebAppData");
-        let tag = hmac::sign(&key, self.0.as_bytes());
-        hmac::Key::new(hmac::HMAC_SHA256, tag.as_ref())
+impl AuthorizationLayer<Embedded> {
+    pub fn new_embedded(bot_token: &str) -> Self {
+        Self {
+            authorizer: Embedded::new(bot_token),
+        }
     }
 }
 
-impl<S> Layer<S> for AuthorizationLayer {
-    type Service = AuthorizationService<S>;
+impl AuthorizationLayer<External> {
+    pub fn new_external(bot_token: &str) -> Self {
+        Self {
+            authorizer: External::new(bot_token),
+        }
+    }
+}
+
+impl<S, A: Authorizer> Layer<S> for AuthorizationLayer<A> {
+    type Service = AuthorizationService<S, A>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        let key = self.prepare_key();
-        AuthorizationService { inner, key }
+        AuthorizationService {
+            inner,
+            authorizer: self.authorizer.clone(),
+        }
     }
 }
 
 #[derive(Clone)]
-pub struct AuthorizationService<S> {
+pub struct AuthorizationService<S, A: Authorizer> {
     inner: S,
-    key: hmac::Key,
+    authorizer: A,
 }
 
-impl<S> AuthorizationService<S> {
+impl<S, A: Authorizer> AuthorizationService<S, A> {
     fn authorize(&self, query_string: Option<&str>) -> Result<User, AuthError> {
-        let query_params =
-            QString::from(query_string.ok_or(AuthError::MissingQueryString)?).into_pairs();
-        self.check_hash(query_params)
-    }
-    fn check_hash(&self, mut query_params: Vec<(String, String)>) -> Result<User, AuthError> {
-        let hash_index = query_params
-            .iter()
-            .position(|(name, _)| name == "hash")
-            .ok_or(AuthError::MissingHash)?;
-        let hash = query_params.swap_remove(hash_index).1;
-        query_params.sort();
-        let data_to_check = query_params
-            .iter()
-            .map(|(name, value)| format!("{}={}", name, value))
-            .collect::<Vec<String>>()
-            .join("\n");
-        let computed_key = hex::encode(hmac::sign(&self.key, data_to_check.as_bytes()).as_ref());
-        let authorized = computed_key == hash;
-        if !authorized {
-            return Err(AuthError::HashDoesntMatch);
-        }
-        let user = query_params
-            .iter()
-            .find(|(name, _)| name == "user")
-            .ok_or(AuthError::MissingUser)
-            .map(|(_, value)| value.as_ref())?;
-
-        serde_json::from_str(user).map_err(|_| AuthError::InvalidUserJson)
+        self.authorizer.authorize(query_string)
     }
 }
 
-impl<S> Service<Request> for AuthorizationService<S>
+impl<S, A: Authorizer> Service<Request> for AuthorizationService<S, A>
 where
     S: Service<Request, Response = Response> + Send + 'static,
     S::Response: From<AuthError> + Send,
@@ -93,7 +74,8 @@ where
     }
 
     fn call(&mut self, mut req: Request) -> Self::Future {
-        let user = self.authorize(req.uri().query());
+        let query_string = req.uri().query();
+        let user = self.authorize(query_string);
         match user {
             Ok(user) => {
                 req.extensions_mut().insert(user);

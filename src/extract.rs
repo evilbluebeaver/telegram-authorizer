@@ -1,11 +1,15 @@
 use axum::{extract::FromRequestParts, http::request::Parts};
 
-use crate::{error::AuthError, layer::User};
+use crate::{authorizer::User, error::AuthError};
 
 #[derive(Debug, Clone)]
-pub struct TelegramUser(pub u64);
+pub struct TelegramUser {
+    pub id: u64,
+    pub first_name: String,
+    pub last_name: Option<String>,
+    pub username: Option<String>,
+}
 
-#[async_trait::async_trait]
 impl<S> FromRequestParts<S> for TelegramUser
 where
     S: Send + Sync,
@@ -24,6 +28,16 @@ where
 
 impl From<User> for TelegramUser {
     fn from(user: User) -> Self {
-        TelegramUser(user.id)
+        TelegramUser {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username,
+        }
     }
+}
+#[cfg(feature = "aide")]
+mod aide {
+    use aide::OperationInput;
+    impl OperationInput for super::TelegramUser {}
 }

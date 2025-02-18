@@ -8,8 +8,8 @@ use thiserror::Error;
 pub enum AuthError {
     #[error("Missing query string")]
     MissingQueryString,
-    #[error("Missing hash field")]
-    MissingHash,
+    #[error("Invalid query string")]
+    InvalidQueryString,
     #[error("Hash doesn't match")]
     HashDoesntMatch,
     #[error("Missing user field")]
